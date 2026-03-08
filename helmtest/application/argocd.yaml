@@ -6,21 +6,21 @@ metadata:
   namespace: argocd
 spec:
   sources:
-    - repoURL: 'https://argoproj.github.io/argo-helm'
+    - repoURL: https://argoproj.github.io/argo-helm
       chart: argo-cd
       targetRevision: 9.3.7
       helm:
         valueFiles:
           - $values/helmtest/values/argocd-values.yaml
-    - repoURL: 'https://github.com/nasir17git/multiscc.git'
+    - repoURL: https://github.com/nasir17git/multiscc.git
       targetRevision: master
       ref: values
-    - repoURL: 'https://github.com/nasir17git/multiscc.git'
+    - repoURL: https://github.com/nasir17git/multiscc.git
       path: ./helmtest/single
       targetRevision: master
   destination:
     namespace: argocd
-    server: 'https://kubernetes.default.svc'
+    server: https://kubernetes.default.svc
   project: default
   syncPolicy:
     automated:
