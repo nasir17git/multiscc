@@ -32,24 +32,24 @@ log_success "필수 도구가 모두 설치되어 있습니다."
 
 # ------------------------------------------------------------
 # 기존 클러스터 확인
-# if kind get clusters | grep -q "^$CLUSTER_NAME$"; then
-#   echo "⚠️  Kind 클러스터 '$CLUSTER_NAME' 가 이미 존재합니다."
-#   read -p "👉 삭제 후 재생성할까요? [y/N]: " answer
-#   case "$answer" in
-#     [yY]|[yY][eE][sS])
-#       log_info "기존 클러스터 $CLUSTER_NAME 삭제 중..."
-#       kind delete cluster --name "$CLUSTER_NAME"
-#       ;;
-#     *)
-#       log_info "기존 클러스터 $CLUSTER_NAME 유지. 스크립트를 종료합니다."
-#       exit 0
-#       ;;
-#   esac
-# fi
+if kind get clusters | grep -q "^$CLUSTER_NAME$"; then
+  echo "⚠️  Kind 클러스터 '$CLUSTER_NAME' 가 이미 존재합니다."
+  read -p "👉 삭제 후 재생성할까요? [y/N]: " answer
+  case "$answer" in
+    [yY]|[yY][eE][sS])
+      log_info "기존 클러스터 $CLUSTER_NAME 삭제 중..."
+      kind delete cluster --name "$CLUSTER_NAME"
+      ;;
+    *)
+      log_info "기존 클러스터 $CLUSTER_NAME 유지. 스크립트를 종료합니다."
+      exit 0
+      ;;
+  esac
+fi
 
-# log_info "Kind 클러스터 $CLUSTER_NAME 생성 중..."
-# kind create cluster --name "$CLUSTER_NAME" --config "$CLUSTER_CONFIG_FILE"
-# log_success "Kind 클러스터 $CLUSTER_NAME 생성 완료."
+log_info "Kind 클러스터 $CLUSTER_NAME 생성 중..."
+kind create cluster --name "$CLUSTER_NAME" --config "$CLUSTER_CONFIG_FILE"
+log_success "Kind 클러스터 $CLUSTER_NAME 생성 완료."
 
 # ------------------------------------------------------------
 # Preload Images
