@@ -1,0 +1,56 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 30001
+    hostPort: 30001
+  - containerPort: 30002
+    hostPort: 30002
+  - containerPort: 30003
+    hostPort: 30003
+  # grafana
+  - containerPort: 30004
+    hostPort: 30004
+  - containerPort: 30005
+    hostPort: 30005
+  - containerPort: 30006
+    hostPort: 30006
+  - containerPort: 30007
+    hostPort: 30007
+  - containerPort: 30008
+    hostPort: 30008
+  # prometheus
+  - containerPort: 30009
+    hostPort: 30009
+  # otel-collector
+  - containerPort: 30010
+    hostPort: 30010
+  - containerPort: 30011
+    hostPort: 30011
+  - containerPort: 30012
+    hostPort: 30012
+  - containerPort: 30013
+    hostPort: 30013
+  - containerPort: 30014
+    hostPort: 30014
+  - containerPort: 30015
+    hostPort: 30015
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    controllerManager:
+      extraArgs:
+        bind-address: 0.0.0.0
+    etcd:
+      local:
+        extraArgs:
+          listen-metrics-urls: "http://0.0.0.0:2381"
+    scheduler:
+      extraArgs:
+        bind-address: 0.0.0.0
+  - |
+    kind: KubeProxyConfiguration
+    metricsBindAddress: 0.0.0.0:10249
+- role: worker
+- role: worker

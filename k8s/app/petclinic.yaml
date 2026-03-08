@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-petclinic
+spec:
+  replicas: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1           # 한번에 1개 추가 생성
+      maxUnavailable: 0     # 장애 허용 0 → 무중단 배포
+  selector:
+    matchLabels:
+      app: custom-petclinic
+  template:
+    metadata:
+      labels:
+        app: custom-petclinic
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: "monitoring/test-instrumentation"
+    spec:
+      containers:
+      - name: app
+        image: nasir17/petclinic:latest
+        env:
+          - name: SPRING_DATASOURCE_URL
+            value: jdbc:mysql://mysql.database.svc.cluster.local:3306/petclinic
+          - name: SPRING_DATASOURCE_USERNAME
+            value: petclinic
+          - name: SPRING_DATASOURCE_PASSWORD
+            value: petclinic
+          - name: SPRING_FLYWAY_ENABLED
+            value: "true"
+          - name: SPRING_FLYWAY_LOCATIONS
+            value: "classpath:db/migration"
+        # ─────────────────────────────
+        # HEALTH PROBES
+        # ─────────────────────────────
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 5
+
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 30   # 앱이 느릴 때도 시작 보장
+
+        # ─────────────────────────────
+
+        volumeMounts:
+          - name: host-logs
+            mountPath: /app/logs
+
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+      volumes:
+        - name: host-logs
+          hostPath:
+            path: /logs
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: custom-petclinic
+spec:
+  type: NodePort
+  selector:
+    app: custom-petclinic
+  ports:
+  - protocol: TCP
+    nodePort: 30001
+    port: 8080
+    targetPort: 8080

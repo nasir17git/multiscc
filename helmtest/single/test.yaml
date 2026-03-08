@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netshoot
+  labels:
+    app: netshoot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netshoot
+  template:
+    metadata:
+      labels:
+        app: netshoot
+    spec:
+      # 기본 네임스페이스에 배포 (명시 안 하면 default)
+      containers:
+        - name: netshoot
+          image: nicolaka/netshoot:latest
+          command: ["sleep", "infinity"]
+          # 디버깅 편의를 위한 권장 설정 (필요에 따라 조정)
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: true
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"

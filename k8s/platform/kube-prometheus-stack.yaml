@@ -1,0 +1,103 @@
+# https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack/77.10.0
+# helm upgrade kube-prometheus-stack prometheus-community/kube-prometheus-stack --version 77.10.0 -n monitoring -f ./platform/kube-prometheus-stack.yaml
+prometheus:
+  service:
+    type: NodePort
+    nodePort: 30009
+  prometheusSpec:
+    enableRemoteWriteReceiver: true
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    retention: 7d
+    enableFeatures:
+      - exemplar-storage
+    tsdb:
+      outOfOrderTimeWindow: 5m
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 10Gi
+    
+alertmanager:
+  enabled: false
+
+grafana:
+  enabled: true
+  defaultDashboardsTimezone: Asia/Seoul
+  adminPassword: "admin" # login: admin/admin
+  env:
+    GF_AUTH_ANONYMOUS_ENABLED: true
+    GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+  service:
+    type: NodePort
+    nodePort: 30004
+  sidecar:
+    dashboards:
+      annotations:
+        grafana_folder: "defaults"
+      folderAnnotation: "grafana_folder"
+      provider:
+        foldersFromFilesStructure: true
+
+  persistence:
+    enabled: true
+    type: sts
+
+  additionalDataSources:
+    - name: loki
+      type: loki
+      url: http://loki-gateway.monitoring.svc.cluster.local
+      access: proxy
+      isDefault: false
+      basicAuth: false
+      editable: true
+      jsonData:
+        derivedFields:
+          - name: trace_id
+            datasourceUid: tempo
+            matcherRegex: "trace_id=(\\w+)"
+            url: '$${__value.raw}'
+            urlDisplayLabel: View Trace
+    - name: tempo
+      type: tempo
+      url: http://tempo-query-frontend.monitoring.svc.cluster.local:3200
+      access: proxy
+      isDefault: false
+      editable: true
+      jsonData:
+        httpMethod: GET
+        tracesToLogsV2:
+          datasourceUid: loki
+          filterByTraceID: true
+          filterBySpanID: true
+          spanStartTimeShift: '-1m'
+          spanEndTimeShift: '1m'
+          tags: [{ key: 'service.name', value: 'service' }]
+          customQuery: true
+          query: '{$${__tags}} |="$${__trace.traceId}" '
+        tracesToMetrics:
+          datasourceUid: 'prometheus'
+          spanStartTimeShift: '-1m'
+          spanEndTimeShift: '1m'
+          tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+          queries:
+            - name: 'Sample query'
+              query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
+        serviceMap:
+          datasourceUid: prometheus
+    - name: Prometheus
+      type: prometheus
+      uid: prometheus
+      access: proxy
+      editable: true
+      url: http://kube-prometheus-stack-prometheus.monitoring:9090/
+      # https://grafana.com/docs/grafana/latest/datasources/prometheus/#provision-the-prometheus-data-source
+      jsonData:
+        exemplarTraceIdDestinations:
+          - name: trace_id
+            datasourceUid: tempo
+            # https://github.com/grafana-operator/grafana-operator/blob/master/api/integreatly/v1alpha1/grafanadatasource_types.go#L205
+            urlDisplayLabel: View in Tempo
