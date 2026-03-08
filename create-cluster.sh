@@ -32,24 +32,24 @@ log_success "필수 도구가 모두 설치되어 있습니다."
 
 # ------------------------------------------------------------
 # 기존 클러스터 확인
-if kind get clusters | grep -q "^$CLUSTER_NAME$"; then
-  echo "⚠️  Kind 클러스터 '$CLUSTER_NAME' 가 이미 존재합니다."
-  read -p "👉 삭제 후 재생성할까요? [y/N]: " answer
-  case "$answer" in
-    [yY]|[yY][eE][sS])
-      log_info "기존 클러스터 $CLUSTER_NAME 삭제 중..."
-      kind delete cluster --name "$CLUSTER_NAME"
-      ;;
-    *)
-      log_info "기존 클러스터 $CLUSTER_NAME 유지. 스크립트를 종료합니다."
-      exit 0
-      ;;
-  esac
-fi
+# if kind get clusters | grep -q "^$CLUSTER_NAME$"; then
+#   echo "⚠️  Kind 클러스터 '$CLUSTER_NAME' 가 이미 존재합니다."
+#   read -p "👉 삭제 후 재생성할까요? [y/N]: " answer
+#   case "$answer" in
+#     [yY]|[yY][eE][sS])
+#       log_info "기존 클러스터 $CLUSTER_NAME 삭제 중..."
+#       kind delete cluster --name "$CLUSTER_NAME"
+#       ;;
+#     *)
+#       log_info "기존 클러스터 $CLUSTER_NAME 유지. 스크립트를 종료합니다."
+#       exit 0
+#       ;;
+#   esac
+# fi
 
-log_info "Kind 클러스터 $CLUSTER_NAME 생성 중..."
-kind create cluster --name "$CLUSTER_NAME" --config "$CLUSTER_CONFIG_FILE"
-log_success "Kind 클러스터 $CLUSTER_NAME 생성 완료."
+# log_info "Kind 클러스터 $CLUSTER_NAME 생성 중..."
+# kind create cluster --name "$CLUSTER_NAME" --config "$CLUSTER_CONFIG_FILE"
+# log_success "Kind 클러스터 $CLUSTER_NAME 생성 완료."
 
 # ------------------------------------------------------------
 # Preload Images
@@ -73,18 +73,19 @@ log_info "플랫폼 서비스 배포 중 (Database, Observability)..."
 
 
 # ArgoCD
-helm upgrade argocd argo/argo-cd --version 9.3.7 -n argocd --install
+kubectl create ns argocd || true
+helm upgrade argocd argo/argo-cd --version 9.3.7 -n argocd -f "./helmtest/values/argocd-values.yaml" --install
 
 # Monitoring (Loki + Tempo + Grafana + Prometheus)
 
 kubectl create ns monitoring || true
 helm upgrade kube-prometheus-stack prometheus-community/kube-prometheus-stack --version 77.10.0 -n monitoring -f "$PLATFORM_DIR/kube-prometheus-stack.yaml" --install
 helm upgrade loki grafana/loki --version 6.41.0 -n monitoring -f "$PLATFORM_DIR/loki.yaml" --install
-helm upgrade tempo grafana/tempo-distributed --version 1.46.2 -n monitoring -f "$PLATFORM_DIR/tempo.yaml" --install
+# helm upgrade tempo grafana/tempo-distributed --version 1.46.2 -n monitoring -f "$PLATFORM_DIR/tempo.yaml" --install
 
-# OpenTelemetry (Operator + Collector)
-helm upgrade otel-operator open-telemetry/opentelemetry-operator --version 0.95.1 -n monitoring -f "$PLATFORM_DIR/otel-operator.yaml" --install --wait
-helm upgrade otel-collector open-telemetry/opentelemetry-collector --version 0.134.1 -n monitoring -f "$PLATFORM_DIR/otel-collector.yaml" --install
+# # OpenTelemetry (Operator + Collector)
+# helm upgrade otel-operator open-telemetry/opentelemetry-operator --version 0.95.1 -n monitoring -f "$PLATFORM_DIR/otel-operator.yaml" --install --wait
+# helm upgrade otel-collector open-telemetry/opentelemetry-collector --version 0.134.1 -n monitoring -f "$PLATFORM_DIR/otel-collector.yaml" --install
 
 # MySQL
 kubectl create ns database || true
@@ -93,7 +94,7 @@ helm upgrade mysql bitnami/mysql --version 14.0.3 -n database -f "$PLATFORM_DIR/
 log_success "플랫폼 서비스 배포 완료."
 
 log_info "애플리케이션 배포 중..."
-kubectl apply -f "$PLATFORM_DIR/instrumentation.yaml"
+# kubectl apply -f "$PLATFORM_DIR/instrumentation.yaml"
 kubectl apply -f "$APP_DIR"
 
 # pet-clinic 서버 준비 대기
