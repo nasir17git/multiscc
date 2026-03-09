@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-dev
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: https://github.com/nasir17git/multiscc.git
+      targetRevision: main
+      path: helm-aoa/base/apps
+      helm:
+        valueFiles:
+          - $values/helm-aoa/overlay/dev/dev-values.yaml
+    - repoURL: https://github.com/nasir17git/multiscc.git
+      targetRevision: main
+      ref: values
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
+    syncOptions:
+    - CreateNamespace=true
