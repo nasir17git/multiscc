@@ -6,8 +6,7 @@ metadata:
   namespace: argocd
 spec:
   sources:
-    - repoURL: https://argoproj.github.io/argo-helm
-      chart: argo-cd
+    - repoURL: oci://ghcr.io/argoproj/argo-helm/argo-cd
       targetRevision: 9.3.7
       helm:
         valueFiles:
