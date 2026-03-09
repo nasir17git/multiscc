@@ -1,0 +1,16 @@
+repoURL: https://github.com/nasir17git/multiscc.git
+
+apps:
+  - name: apps
+  - name: argocd
+    namespace: argocd
+    helmChartURL: https://argoproj.github.io/argo-helm
+    chart: argo-cd
+    targetRevision: 9.3.7
+    additionalSources: true
+  - name: kube-prometheus-stack
+    namespace: monitoring
+    helmChartURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 45.11.1
+    additionalSources: true

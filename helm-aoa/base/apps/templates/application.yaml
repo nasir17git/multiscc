@@ -1,0 +1,37 @@
+{{- range .Values.apps }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .name }}-{{ $.Values.env_name }} 
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: {{ .namespace }}
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: {{ .helmChartURL }}
+      chart: {{ .chart }}
+      targetRevision: {{ .targetRevision }}
+      helm:
+        valueFiles:
+          - $values/helm-aoa/base/{{.name}}/{{.name}}.yaml
+    - repoURL: {{ $.Values.repoURL }}
+      targetRevision: main
+      ref: values
+  {{- if .additionalSources }}
+    - repoURL: {{ $.Values.repoURL }}
+      targetRevision: main
+      path: ./helm-aoa/base/{{.name}}/additional-sources
+  {{- end }}
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
+    syncOptions:
+    - CreateNamespace=true
+    - ServerSideApply=true
+{{- end }}

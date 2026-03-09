@@ -1,0 +1,3 @@
+# helm template 
+# (필수) 클러스터 변동 값 입력
+env_name: dso
