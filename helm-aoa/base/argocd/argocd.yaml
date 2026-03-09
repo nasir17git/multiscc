@@ -1,6 +1,6 @@
 # https://artifacthub.io/packages/helm/argo/argo-cd/9.3.7
 # helm repo add argo https://argoproj.github.io/argo-helm
-# helm upgrade argocd argo/argo-cd -n argocd -f ./addons/overlay/dev/3-argocd.yaml --version 9.3.7
+# helm upgrade argocd argo/argo-cd -n argocd -f ./base/argocd/argocd.yaml --version 9.3.7
 
 fullnameOverride: argocd
 configs:
