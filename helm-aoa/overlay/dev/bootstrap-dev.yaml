@@ -1,3 +1,4 @@
+# kubectl apply -f ./helm-aoa/overlay/dev/bootstrap-dev.yaml -n argocd
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

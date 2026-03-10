@@ -34,4 +34,10 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - ServerSideApply=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 3m
 {{- end }}

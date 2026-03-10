@@ -1,3 +1,4 @@
 # helm template dev-release base/apps -f overlay/dev/dev-values.yaml
+# helm upgrade argocd argo/argo-cd --version 9.3.7 -n argocd -f "./helmtest/values/argocd-values.yaml" --install --create-namespace
 # (필수) 클러스터 변동 값 입력
 env_name: dev

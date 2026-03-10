@@ -13,7 +13,7 @@ configs:
     # htpasswd -nbBC 10 "" admin1! | tr -d ':\n' | sed 's/$2y/$2a/'
     argocdServerAdminPassword: $2a$10$Hkn7gpjEqu2U.6da00/l4ODc7ayz.ps70E/LeoiyeGsqHjlR/LkiO
 notifications:
-  enabled: false
+  enabled: true
 server:
   service:
     type: NodePort
